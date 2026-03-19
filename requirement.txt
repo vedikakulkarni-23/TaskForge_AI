@@ -1,0 +1,5 @@
+cd backend
+npm install express mongoose dotenv cors bcryptjs jsonwebtoken nodemailer node-fetch groq-sdk socket.io nodemon
+
+cd frontend
+npm install react react-dom react-router-dom axios socket.io-client react-scripts
