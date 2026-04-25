@@ -7,6 +7,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import TeamLeaderDashboard from './pages/TeamLeaderDashboard';
 import MemberDashboard from './pages/MemberDashboard';
 import Tools from './pages/Tools';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // ── Get user from localStorage safely ────────────────────────────────────────
 const getUser = () => {
@@ -70,6 +72,9 @@ function App() {
         {/* Auth routes */}
         <Route path="/verify-account/:token" element={<VerifyAccount />} />
         <Route path="/verify-2fa" element={<TwoFactorAuth />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        
 
         {/* Protected routes */}
         <Route path="/admin" element={

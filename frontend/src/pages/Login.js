@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
@@ -148,6 +148,16 @@ const Login = () => {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
+
+          {/* Forgot Password Link */}
+          <div className={`mt-6 pt-6 border-t ${borderColor} text-center`}>
+            <Link
+              to="/forgot-password"
+              className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition`}
+            >
+              Forgot password?
+            </Link>
+          </div>
 
           {/* Demo Credentials */}
           <div className={`mt-6 pt-6 border-t ${borderColor}`}>

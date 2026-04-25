@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { login, verify2FA, resend2FA, verifyAccount } = require('../controllers/authControllers');
+const {
+  login,
+  verify2FA,
+  resend2FA,
+  verifyAccount,
+  forgotPassword,
+  resetPassword
+} = require('../controllers/authControllers');
 
 // @route   POST /api/auth/login
 router.post('/login', login);
@@ -13,5 +20,11 @@ router.post('/resend-2fa', resend2FA);
 
 // @route   POST /api/auth/verify-account
 router.post('/verify-account', verifyAccount);
+
+// @route   POST /api/auth/forgot-password
+router.post('/forgot-password', forgotPassword);
+
+// @route   POST /api/auth/reset-password/:token
+router.post('/reset-password/:token', resetPassword);
 
 module.exports = router;

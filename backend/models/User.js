@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    select: false // Don't return password by default
+    select: false
   },
   role: {
     type: String,
@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 100
   },
-  
+
   // Email Verification Fields
   isEmailVerified: {
     type: Boolean,
@@ -52,7 +52,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false
   },
-  
+
   // 2FA Fields
   twoFactorEnabled: {
     type: Boolean,
@@ -66,12 +66,22 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false
   },
-  
+
+  // Password Reset Fields
+  passwordResetToken: {
+    type: String,
+    select: false
+  },
+  passwordResetExpires: {
+    type: Date,
+    select: false
+  },
+
   // Account Status
   accountStatus: {
     type: String,
     enum: ['pending', 'active', 'suspended'],
-    default: 'pending' // Pending until email verified
+    default: 'pending'
   }
 }, {
   timestamps: true
@@ -82,13 +92,10 @@ userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
     next();
   }
-  
-  // Only hash if password exists (during verification, not creation)
   if (this.password) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   }
-  
   next();
 });
 
