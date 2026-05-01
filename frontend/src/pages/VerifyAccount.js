@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const VerifyAccount = () => {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true';
@@ -34,9 +36,9 @@ const VerifyAccount = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/verify-account', {
-        token,
-        password
+      const response = await axios.post(`${API_URL}/api/auth/verify-account`, {
+      token,
+      password
       });
 
       setMessage({ text: response.data.message, type: 'success' });
