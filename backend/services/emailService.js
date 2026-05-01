@@ -2,38 +2,26 @@ const nodemailer = require('nodemailer');
 
 // Create email transporter
 const createTransporter = () => {
-  console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
-  console.log('EMAIL_APP_PASSWORD exists:', !!process.env.EMAIL_APP_PASSWORD);
-
-  const transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_APP_PASSWORD
+      user: process.env.EMAIL_USER, // Your Gmail address
+      pass: process.env.EMAIL_APP_PASSWORD // Gmail App Password (NOT your regular password!)
     }
   });
-
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error('❌ Transporter verify error:', error);
-    } else {
-      console.log('✅ Transporter is ready:', success);
-    }
-  });
-
-  return transporter;
 };
 
 // Send account creation email to new user
 const sendAccountCreationEmail = async (userEmail, userName, verificationToken) => {
   const transporter = createTransporter();
-
+  
+  // Fix: Ensure FRONTEND_URL is defined, fallback to localhost
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const verificationUrl = `${frontendUrl}/verify-account/${verificationToken}`;
-
+  
   console.log('📧 Sending verification email to:', userEmail);
   console.log('🔗 Verification URL:', verificationUrl);
-
+  
   const mailOptions = {
     from: `"TASKFORGE Team" <${process.env.EMAIL_USER}>`,
     to: userEmail,
@@ -84,7 +72,7 @@ const sendAccountCreationEmail = async (userEmail, userName, verificationToken) 
     console.log('✅ Email sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending verification email:', error);
+    console.error('❌ Error sending email:', error);
     throw new Error('Failed to send verification email');
   }
 };
@@ -92,9 +80,7 @@ const sendAccountCreationEmail = async (userEmail, userName, verificationToken) 
 // Send 2FA code email
 const send2FACode = async (userEmail, userName, code) => {
   const transporter = createTransporter();
-
-  console.log('📧 Sending 2FA code to:', userEmail);
-
+  
   const mailOptions = {
     from: `"TASKFORGE Team" <${process.env.EMAIL_USER}>`,
     to: userEmail,
@@ -134,11 +120,15 @@ const send2FACode = async (userEmail, userName, code) => {
   };
 
   try {
+    console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
+    console.log('EMAIL_APP_PASSWORD exists:', !!process.env.EMAIL_APP_PASSWORD);
+    console.log('Sending 2FA to:', userEmail);
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ 2FA code sent successfully:', info.messageId);
+    console.log('2FA code sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending 2FA code:', error);
+    console.error('Full 2FA email error:', error);
+    console.error('Error sending 2FA code:', error);
     throw new Error('Failed to send 2FA code');
   }
 };
