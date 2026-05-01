@@ -30,19 +30,23 @@ const verifyAccount = async (req, res) => {
     if (!password || password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
+
     const user = await User.findOne({
       emailVerificationToken: token,
       emailVerificationExpires: { $gt: Date.now() }
     }).select('+emailVerificationToken +emailVerificationExpires');
+
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired verification token' });
     }
+
     user.password = password;
     user.isEmailVerified = true;
     user.accountStatus = 'active';
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
     await user.save();
+
     res.json({ message: 'Account verified successfully! You can now login.', email: user.email });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -52,31 +56,38 @@ const verifyAccount = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!validateEmail(email)) {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
+
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+
     if (!user.isEmailVerified) {
       return res.status(403).json({
         message: 'Please verify your email first. Check your inbox for verification link.',
         needsVerification: true
       });
     }
+
     if (user.accountStatus !== 'active') {
       return res.status(403).json({ message: 'Your account is not active. Please contact admin.' });
     }
+
     const isPasswordValid = await user.matchPassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+
     const twoFactorCode = generate2FACode();
     const twoFactorExpires = Date.now() + 10 * 60 * 1000;
     user.twoFactorCode = twoFactorCode;
     user.twoFactorExpires = twoFactorExpires;
     await user.save();
+
     await send2FACode(user.email, user.name, twoFactorCode);
     res.json({ message: 'Verification code sent to your email', requires2FA: true, userId: user._id });
   } catch (error) {
@@ -88,23 +99,29 @@ const verify2FA = async (req, res) => {
   try {
     const { userId, code } = req.body;
     const user = await User.findById(userId).select('+twoFactorCode +twoFactorExpires');
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     if (user.twoFactorExpires < Date.now()) {
       return res.status(400).json({ message: 'Verification code expired. Please login again.' });
     }
+
     if (user.twoFactorCode !== code) {
       return res.status(401).json({ message: 'Invalid verification code' });
     }
+
     user.twoFactorCode = undefined;
     user.twoFactorExpires = undefined;
     await user.save();
+
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
+
     res.json({
       token,
       userId: user._id,
@@ -125,14 +142,17 @@ const resend2FA = async (req, res) => {
   try {
     const { userId } = req.body;
     const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     const twoFactorCode = generate2FACode();
     const twoFactorExpires = Date.now() + 10 * 60 * 1000;
     user.twoFactorCode = twoFactorCode;
     user.twoFactorExpires = twoFactorExpires;
     await user.save();
+
     await send2FACode(user.email, user.name, twoFactorCode);
     res.json({ message: 'New verification code sent to your email' });
   } catch (error) {
@@ -143,19 +163,24 @@ const resend2FA = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+
     if (!validateEmail(email)) {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
+
     const user = await User.findOne({ email });
+
     // Always return success to prevent email enumeration
     if (!user) {
       return res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
     }
+
     if (!user.isEmailVerified) {
       return res.status(400).json({
         message: 'This account has not been verified yet. Please check your inbox for the original verification email.'
       });
     }
+
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     user.passwordResetToken = hashedToken;
@@ -164,6 +189,7 @@ const forgotPassword = async (req, res) => {
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
     const transporter = createTransporter();
 
     await transporter.sendMail({
@@ -217,23 +243,29 @@ const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
+
     if (!password || password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
+
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
     const user = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() }
     }).select('+passwordResetToken +passwordResetExpires');
+
     if (!user) {
       return res.status(400).json({
         message: 'Password reset link is invalid or has expired. Please request a new one.'
       });
     }
+
     user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
+
     console.log('Password reset successfully for:', user.email);
     res.json({ message: 'Password reset successfully! You can now login with your new password.' });
   } catch (error) {

@@ -17,7 +17,6 @@ const Login = () => {
   }, [darkMode]);
 
   const validateEmail = (email) => {
-    // Real email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -25,35 +24,24 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
-    // Validate email format
+
     if (!validateEmail(email)) {
       setError('Please enter a valid email address');
       return;
     }
-    
+
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/login', {
-        email,
-        password
-      });
+      const response = await axios.post('/api/auth/login', { email, password });
 
-      // If 2FA is required, redirect to 2FA page
       if (response.data.requires2FA) {
         navigate('/verify-2fa', { state: { userId: response.data.userId } });
       } else {
-        // Direct login (shouldn't happen with new system, but keeping for compatibility)
         localStorage.setItem('user', JSON.stringify(response.data));
-
-        if (response.data.role === 'admin') {
-          navigate('/admin');
-        } else if (response.data.role === 'teamleader') {
-          navigate('/team-leader');
-        } else {
-          navigate('/member');
-        }
+        if (response.data.role === 'admin') navigate('/admin');
+        else if (response.data.role === 'teamleader') navigate('/team-leader');
+        else navigate('/member');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -72,7 +60,7 @@ const Login = () => {
 
   return (
     <div className={`min-h-screen ${bgMain} flex items-center justify-center p-4`}>
-      {/* Dark Mode Toggle - Top Right */}
+      {/* Dark Mode Toggle */}
       <button
         onClick={() => setDarkMode(!darkMode)}
         className={`fixed top-6 right-6 p-3 rounded-lg ${darkMode ? 'bg-[#252525] text-gray-400 hover:text-white border border-gray-800' : 'bg-white text-gray-600 hover:text-gray-900 border border-gray-200 shadow-sm'} transition`}
@@ -90,7 +78,7 @@ const Login = () => {
       </button>
 
       <div className="relative w-full max-w-md">
-        {/* Logo/Brand */}
+        {/* Brand */}
         <div className="text-center mb-8">
           <h1 className={`text-4xl font-bold ${textPrimary} mb-2`}>TASKFORGE</h1>
           <p className={`${textSecondary} text-sm`}>Team Collaboration Platform</p>
@@ -119,13 +107,20 @@ const Login = () => {
                 placeholder="name@example.com"
                 required
               />
-              <p className={`text-xs ${textSecondary} mt-1`}>Use a valid email address</p>
             </div>
 
             <div>
-              <label className={`block text-sm font-medium ${textPrimary} mb-2`}>
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className={`block text-sm font-medium ${textPrimary}`}>
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition`}
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 type="password"
                 value={password}
@@ -140,8 +135,8 @@ const Login = () => {
               type="submit"
               disabled={loading}
               className={`w-full py-3 rounded-md font-medium transition ${
-                darkMode 
-                  ? 'bg-white text-black hover:bg-gray-100' 
+                darkMode
+                  ? 'bg-white text-black hover:bg-gray-100'
                   : 'bg-gray-900 text-white hover:bg-gray-800'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
@@ -175,7 +170,6 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Footer */}
         <p className={`text-center text-xs ${textSecondary} mt-8`}>
           © 2024 TASKFORGE. All rights reserved.
         </p>
