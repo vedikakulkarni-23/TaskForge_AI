@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const ResetPassword = () => {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true';
@@ -43,7 +45,7 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      await axios.post(`/api/auth/reset-password/${token}`, { password });
+      await axios.post(`${API_URL}/api/auth/reset-password/${token}`, { password });
       setSuccess(true);
       // Auto redirect to login after 3 seconds
       setTimeout(() => navigate('/'), 3000);

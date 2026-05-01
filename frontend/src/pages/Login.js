@@ -146,15 +146,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Forgot Password Link */}
-          <div className={`mt-6 pt-6 border-t ${borderColor} text-center`}>
-            <Link
-              to="/forgot-password"
-              className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition`}
-            >
-              Forgot password?
-            </Link>
-          </div>
 
           {/* Demo Credentials */}
           <div className={`mt-6 pt-6 border-t ${borderColor}`}>
