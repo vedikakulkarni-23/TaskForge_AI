@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const TwoFactorAuth = () => {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true';
@@ -28,9 +30,9 @@ const TwoFactorAuth = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/verify-2fa', {
-        userId,
-        code
+      const response = await axios.post(`${API_URL}/api/auth/verify-2fa`, {
+      userId,
+      code
       });
 
       localStorage.setItem('user', JSON.stringify(response.data));
@@ -57,7 +59,7 @@ const TwoFactorAuth = () => {
     setMessage({ text: '', type: '' });
 
     try {
-      const response = await axios.post('/api/auth/resend-2fa', { userId });
+      const response = await axios.post(`${API_URL}/api/auth/resend-2fa`, { userId });
       setMessage({ text: response.data.message, type: 'success' });
     } catch (err) {
       setMessage({ 
