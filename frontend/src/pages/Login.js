@@ -35,7 +35,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
 
       if (response.data.requires2FA) {
         navigate('/verify-2fa', { state: { userId: response.data.userId } });
