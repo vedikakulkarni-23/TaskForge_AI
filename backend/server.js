@@ -15,29 +15,28 @@ const allowedOrigins = [
   'http://localhost:3000'
 ].filter(Boolean);
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  credentials: true
+};
 
-app.options('*', cors(corsOptions));
-
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }
 });
-
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch((err) => console.error('❌ MongoDB error:', err));
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -82,7 +81,6 @@ io.on('connection', (socket) => {
 
     socket.emit('existing-peers', []);
     io.to(roomId).emit('room-users', Array.from(rooms.get(roomId).participants.values()));
-    console.log(`🏠 Room created: ${roomId} by ${userName}`);
   });
 
   socket.on('join-room', ({ roomId, userId, userName, role, isGuest }) => {
@@ -119,8 +117,6 @@ io.on('connection', (socket) => {
       socket.emit('waiting-lobby', {
         message: 'Waiting for the host to let you in...'
       });
-
-      console.log(`🚪 ${userName} waiting in lobby for ${roomId}`);
     }
   });
 
@@ -133,23 +129,18 @@ io.on('connection', (socket) => {
 
     room.lobby.delete(targetSocketId);
     const targetSocket = io.sockets.sockets.get(targetSocketId);
-
     admitUser(targetSocket, roomId, lobbyUser);
-    console.log(`✅ ${lobbyUser.userName} admitted to ${roomId}`);
   });
 
   socket.on('deny-user', ({ roomId, targetSocketId }) => {
     const room = rooms.get(roomId);
     if (!room) return;
 
-    const user = room.lobby.get(targetSocketId);
     room.lobby.delete(targetSocketId);
 
     io.to(targetSocketId).emit('join-denied', {
       message: 'The host did not admit you to this meeting.'
     });
-
-    console.log(`❌ ${user?.userName} denied from ${roomId}`);
   });
 
   socket.on('offer', ({ to, offer, userName }) => {
@@ -266,14 +257,38 @@ function handleLeave(socket, roomId) {
   );
 
   socket.leave(roomId);
-  console.log(`👋 ${user?.userName} left ${roomId}`);
 }
 
-const PORT = process.env.PORT || 5000;
-
-server.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🌐 Allowed origins: ${allowedOrigins.join(', ')}`);
-  console.log(`🤖 Groq AI: ${process.env.GROQ_API_KEY ? 'Enabled' : 'Not configured'}`);
-  console.log('🎥 WebRTC: Enabled with lobby system');
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
 });
+
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled Rejection:', reason);
+  process.exit(1);
+});
+
+async function startServer() {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is missing in environment variables');
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ Connected to MongoDB');
+
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`🌐 Allowed origins: ${allowedOrigins.join(', ')}`);
+      console.log(`🤖 Groq AI: ${process.env.GROQ_API_KEY ? 'Enabled' : 'Not configured'}`);
+      console.log('🎥 WebRTC: Enabled with lobby system');
+    });
+  } catch (error) {
+    console.error('❌ Startup error:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
