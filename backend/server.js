@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',
-  'https://your-vercel-domain.vercel.app'
+  'https://task-forge-eiizpgagx-vedikakulkarni-23s-projects.vercel.app/'
 ].filter(Boolean);
 
 const corsOptions = {
